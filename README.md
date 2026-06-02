@@ -141,59 +141,12 @@ curl -X POST http://localhost:3000/api/payments/create-payment-intent \
 
 ### Supported Databases
 
-1. **SQLite** (default) - No setup required
-2. **PostgreSQL** - Production recommended
-3. **MySQL** - Alternative production option
 
-### Database Tables
+1. **PostgreSQL** - Production recommended
 
-- `customers` - Customer information
-- `products` - Product catalog
-- `prices` - Pricing tiers
-- `payments` - Payment transactions
-- `refunds` - Refund records
-- `subscriptions` - Recurring subscriptions
-- `webhook_events` - Stripe event logs
 
-### Relationships
 
-```
-Customer ──< Payment ──< Refund
-Customer ──< Subscription
-Product ──< Price ──< Subscription
-```
 
----
-
-## 🔌 API Endpoints
-
-### Payments
-- `POST /api/payments/create-payment-intent` - Create payment
-- `GET /api/payments/payment-intent/:id` - Get payment
-- `GET /api/payments` - List payments
-- `POST /api/payments/refund` - Create refund
-
-### Customers
-- `POST /api/customers/create` - Create customer
-- `GET /api/customers/:id` - Get customer
-- `GET /api/customers/:id/stats` - Customer analytics
-- `PUT /api/customers/:id` - Update customer
-- `GET /api/customers` - List customers
-
-### Products
-- `POST /api/products/create` - Create product with price
-- `GET /api/products/:id` - Get product
-- `GET /api/products` - List products
-- `PUT /api/products/:id` - Update product
-
-### Checkout
-- `POST /api/checkout/create-checkout-session` - Create checkout
-- `GET /api/checkout/checkout-session/:id` - Get session
-
-### Webhooks
-- `POST /api/webhook` - Receive Stripe events
-
----
 
 ## 💳 Test Cards
 
@@ -226,30 +179,6 @@ PORT=3000
 NODE_ENV=development
 ```
 
----
-
-## 🧪 Testing
-
-### Test Payment Flow
-
-1. Open `client-example.html` in browser
-2. Enter amount: `20.00`
-3. Enter description: `Test payment`
-4. Card: `4242 4242 4242 4242`
-5. Expiry: `12/25`, CVC: `123`, ZIP: `12345`
-6. Click "Pay Now"
-
-### Verify in Database
-
-```bash
-# SQLite
-sqlite3 database.sqlite "SELECT * FROM payments;"
-
-# Check customer
-sqlite3 database.sqlite "SELECT * FROM customers;"
-```
-
----
 
 ## 🔐 Security
 
