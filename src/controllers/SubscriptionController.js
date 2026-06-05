@@ -1,15 +1,14 @@
-const stripe = require('../config/stripe');
-const {
-    UserSubscription,
+import stripe from '../config/stripe.js';
+import { UserSubscription,
     SubscriptionHistory,
     SubscriptionPlan,
     User
-} = require('../models');
+ } from '../models/index.js';
 
 /**
  * Subscribe to a Subscription Plan
  */
-exports.subscribe = async (req, res, next) => {
+export const subscribe = async (req, res, next) => {
     try {
         const { plan_id, payment_method_id } = req.body;
         const user_id = req.user.id;
@@ -144,7 +143,7 @@ exports.subscribe = async (req, res, next) => {
 /**
  * Cancel a Subscription
  */
-exports.cancelSubscription = async (req, res, next) => {
+export const cancelSubscription = async (req, res, next) => {
     try {
         const { id } = req.params;
         const { cancel_immediately } = req.body; // true = cancel now, false/undefined = cancel at period end
@@ -220,7 +219,7 @@ exports.cancelSubscription = async (req, res, next) => {
 /**
  * List User's Subscriptions
  */
-exports.listUserSubscriptions = async (req, res, next) => {
+export const listUserSubscriptions = async (req, res, next) => {
     try {
         const user_id = req.user.id;
         const { status } = req.query; // Optional filter by status
@@ -255,7 +254,7 @@ exports.listUserSubscriptions = async (req, res, next) => {
 /**
  * Get Single Subscription
  */
-exports.getSubscription = async (req, res, next) => {
+export const getSubscription = async (req, res, next) => {
     try {
         const { id } = req.params;
         const user_id = req.user.id;
@@ -297,7 +296,7 @@ exports.getSubscription = async (req, res, next) => {
 /**
  * Get Subscription History
  */
-exports.getSubscriptionHistory = async (req, res, next) => {
+export const getSubscriptionHistory = async (req, res, next) => {
     try {
         const { id } = req.params;
         const user_id = req.user.id;
@@ -333,7 +332,7 @@ exports.getSubscriptionHistory = async (req, res, next) => {
 /**
  * Resume Canceled Subscription
  */
-exports.resumeSubscription = async (req, res, next) => {
+export const resumeSubscription = async (req, res, next) => {
     try {
         const { id } = req.params;
         const user_id = req.user.id;
@@ -400,7 +399,7 @@ exports.resumeSubscription = async (req, res, next) => {
 /**
  * Upgrade/Downgrade Subscription
  */
-exports.upgradeSubscription = async (req, res, next) => {
+export const upgradeSubscription = async (req, res, next) => {
     try {
         const { id } = req.params;
         const { new_plan_id } = req.body;

@@ -1,5 +1,5 @@
-require('dotenv').config();
-const { Sequelize } = require('sequelize');
+import 'dotenv/config';
+import { Sequelize } from 'sequelize';
 
 // Database configuration
 let sequelize;
@@ -63,4 +63,4 @@ const testConnection = async () => {
     }
 };
 
-module.exports = { sequelize, testConnection };
+export { sequelize, testConnection };

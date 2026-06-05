@@ -1,7 +1,7 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const SubscriptionController = require('../controllers/SubscriptionController');
-const { authenticate, authorize } = require('../middleware/auth');
+import * as SubscriptionController from '../controllers/SubscriptionController.js';
+import { authenticate, authorize } from '../middleware/auth.js';
 
 /**
  * @route   POST /api/subscriptions/subscribe
@@ -80,4 +80,4 @@ router.get('/:id/history',
     SubscriptionController.getSubscriptionHistory
 );
 
-module.exports = router;
+export default router;

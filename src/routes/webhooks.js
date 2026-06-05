@@ -1,8 +1,8 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const WebhookController = require('../controllers/WebhookController');
+import WebhookController from '../controllers/WebhookController.js';
 
 // Webhook endpoint - must use raw body
 router.post('/', express.raw({ type: 'application/json' }), WebhookController.handleWebhook.bind(WebhookController));
 
-module.exports = router;
+export default router;

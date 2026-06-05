@@ -1,6 +1,6 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const ProductController = require('../controllers/ProductController');
+import ProductController from '../controllers/ProductController.js';
 
 // Create Product with Price
 router.post('/create', ProductController.createProduct.bind(ProductController));
@@ -17,4 +17,4 @@ router.put('/:id', ProductController.updateProduct.bind(ProductController));
 // Delete Product
 router.delete('/:id', ProductController.deleteProduct.bind(ProductController));
 
-module.exports = router;
+export default router;

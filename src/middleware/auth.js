@@ -1,5 +1,5 @@
-const jwt = require('jsonwebtoken');
-const { User } = require('../models');
+import jwt from 'jsonwebtoken';
+import { User } from '../models/index.js';
 
 // JWT Secret (should be in .env)
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-this-in-production';
@@ -122,7 +122,7 @@ const optionalAuth = async (req, res, next) => {
     }
 };
 
-module.exports = {
+export {
     generateToken,
     authenticate,
     authorize,

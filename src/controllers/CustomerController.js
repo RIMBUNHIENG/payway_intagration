@@ -1,5 +1,5 @@
-const stripe = require('../config/stripe');
-const { Customer, Payment, Subscription } = require('../models');
+import stripe from '../config/stripe.js';
+import { Customer, Payment, Subscription  } from '../models/index.js';
 
 class CustomerController {
     // Create Customer
@@ -224,4 +224,4 @@ class CustomerController {
     }
 }
 
-module.exports = new CustomerController();
+export default new CustomerController();

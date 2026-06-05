@@ -1,5 +1,5 @@
-const stripe = require('../config/stripe');
-const { Payment, Customer, Refund } = require('../models');
+import stripe from '../config/stripe.js';
+import { Payment, Customer, Refund  } from '../models/index.js';
 
 class PaymentController {
     // Create Payment Intent
@@ -279,4 +279,4 @@ class PaymentController {
     }
 }
 
-module.exports = new PaymentController();
+export default new PaymentController();

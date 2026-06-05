@@ -1,5 +1,5 @@
-const { DataTypes } = require('sequelize');
-const { sequelize } = require('../database/config');
+import { DataTypes  } from 'sequelize';
+import { sequelize  } from '../database/config.js';
 
 const SubscriptionPlan = sequelize.define('SubscriptionPlan', {
     id: {
@@ -105,4 +105,4 @@ const SubscriptionPlan = sequelize.define('SubscriptionPlan', {
     ]
 });
 
-module.exports = SubscriptionPlan;
+export default SubscriptionPlan;

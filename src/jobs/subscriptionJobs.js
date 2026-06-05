@@ -1,7 +1,7 @@
-const cron = require('node-cron');
-const { Op } = require('sequelize');
-const { UserSubscription, SubscriptionHistory, User, SubscriptionPlan } = require('../models');
-const stripe = require('../config/stripe');
+import cron from 'node-cron';
+import { Op } from 'sequelize';
+import { UserSubscription, SubscriptionHistory, User, SubscriptionPlan } from '../models/index.js';
+import stripe from '../config/stripe.js';
 
 /**
  * Check for expiring subscriptions and send reminders
@@ -292,7 +292,7 @@ const stopAllJobs = () => {
     console.log('✅ All subscription cron jobs stopped');
 };
 
-module.exports = {
+export {
     startAllJobs,
     stopAllJobs,
     checkExpiringSubscriptions,

@@ -1,7 +1,7 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const SubscriptionPlanController = require('../controllers/SubscriptionPlanController');
-const { authenticate, authorize } = require('../middleware/auth');
+import SubscriptionPlanController from '../controllers/SubscriptionPlanController.js';
+import { authenticate, authorize  } from '../middleware/auth.js';
 
 // Public routes
 router.get('/', SubscriptionPlanController.listPlans.bind(SubscriptionPlanController));
@@ -13,4 +13,4 @@ router.post('/', authenticate, authorize('admin'), SubscriptionPlanController.cr
 router.put('/:id', authenticate, authorize('admin'), SubscriptionPlanController.updatePlan.bind(SubscriptionPlanController));
 router.delete('/:id', authenticate, authorize('admin'), SubscriptionPlanController.deactivatePlan.bind(SubscriptionPlanController));
 
-module.exports = router;
+export default router;

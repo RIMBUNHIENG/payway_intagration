@@ -1,7 +1,7 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const AuthController = require('../controllers/AuthController');
-const { authenticate } = require('../middleware/auth');
+import AuthController from '../controllers/AuthController.js';
+import { authenticate  } from '../middleware/auth.js';
 
 // Public routes
 router.post('/register', AuthController.register.bind(AuthController));
@@ -12,4 +12,4 @@ router.get('/profile', authenticate, AuthController.getProfile.bind(AuthControll
 router.put('/profile', authenticate, AuthController.updateProfile.bind(AuthController));
 router.post('/change-password', authenticate, AuthController.changePassword.bind(AuthController));
 
-module.exports = router;
+export default router;

@@ -1,24 +1,24 @@
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const bodyParser = require('body-parser');
-const { sequelize, testConnection } = require('./src/database/config');
+import 'dotenv/config';
+import express from 'express';
+import cors from 'cors';
+import bodyParser from 'body-parser';
+import { sequelize, testConnection } from './src/database/config.js';
 
 // Import routes
-const paymentsRouter = require('./src/routes/payments');
-const checkoutRouter = require('./src/routes/checkout');
-const customersRouter = require('./src/routes/customers');
-const productsRouter = require('./src/routes/products');
-const webhooksRouter = require('./src/routes/webhooks');
-const authRouter = require('./src/routes/auth');
-const subscriptionPlansRouter = require('./src/routes/subscription-plans');
-const subscriptionsRouter = require('./src/routes/subscriptions');
+import paymentsRouter from './src/routes/payments.js';
+import checkoutRouter from './src/routes/checkout.js';
+import customersRouter from './src/routes/customers.js';
+import productsRouter from './src/routes/products.js';
+import webhooksRouter from './src/routes/webhooks.js';
+import authRouter from './src/routes/auth.js';
+import subscriptionPlansRouter from './src/routes/subscription-plans.js';
+import subscriptionsRouter from './src/routes/subscriptions.js';
 
 // Import middleware
-const errorHandler = require('./src/middleware/errorHandler');
+import errorHandler from './src/middleware/errorHandler.js';
 
 // Import jobs
-const { startAllJobs } = require('./src/jobs/subscriptionJobs');
+import { startAllJobs } from './src/jobs/subscriptionJobs.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;

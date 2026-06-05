@@ -1,5 +1,5 @@
-const stripe = require('../config/stripe');
-const { Product, Price } = require('../models');
+import stripe from '../config/stripe.js';
+import { Product, Price  } from '../models/index.js';
 
 class ProductController {
     // Create Product with Price
@@ -205,4 +205,4 @@ class ProductController {
     }
 }
 
-module.exports = new ProductController();
+export default new ProductController();

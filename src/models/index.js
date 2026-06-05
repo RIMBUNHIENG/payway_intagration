@@ -1,14 +1,14 @@
-const Customer = require('./Customer');
-const Product = require('./Product');
-const Price = require('./Price');
-const Payment = require('./Payment');
-const Refund = require('./Refund');
-const Subscription = require('./Subscription');
-const WebhookEvent = require('./WebhookEvent');
-const User = require('./User');
-const SubscriptionPlan = require('./SubscriptionPlan');
-const UserSubscription = require('./UserSubscription');
-const SubscriptionHistory = require('./SubscriptionHistory');
+import Customer from './Customer.js';
+import Product from './Product.js';
+import Price from './Price.js';
+import Payment from './Payment.js';
+import Refund from './Refund.js';
+import Subscription from './Subscription.js';
+import WebhookEvent from './WebhookEvent.js';
+import User from './User.js';
+import SubscriptionPlan from './SubscriptionPlan.js';
+import UserSubscription from './UserSubscription.js';
+import SubscriptionHistory from './SubscriptionHistory.js';
 
 // Define Relationships
 
@@ -111,7 +111,7 @@ SubscriptionHistory.belongsTo(UserSubscription, {
     as: 'subscription'
 });
 
-module.exports = {
+export {
     Customer,
     Product,
     Price,

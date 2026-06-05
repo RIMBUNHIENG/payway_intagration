@@ -1,7 +1,7 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const PaymentController = require('../controllers/PaymentController');
-const { validatePaymentIntent, validateRefund } = require('../middleware/validation');
+import PaymentController from '../controllers/PaymentController.js';
+import { validatePaymentIntent, validateRefund  } from '../middleware/validation.js';
 
 // Create Payment Intent
 router.post('/create-payment-intent', validatePaymentIntent, PaymentController.createPaymentIntent.bind(PaymentController));
@@ -21,4 +21,4 @@ router.post('/refund', validateRefund, PaymentController.createRefund.bind(Payme
 // List all Payment Intents (with pagination)
 router.get('/', PaymentController.listPayments.bind(PaymentController));
 
-module.exports = router;
+export default router;

@@ -1,7 +1,7 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const stripe = require('../config/stripe');
-const { validateCheckoutSession } = require('../middleware/validation');
+import stripe from '../config/stripe.js';
+import { validateCheckoutSession  } from '../middleware/validation.js';
 
 // Create Checkout Session
 router.post('/create-checkout-session', validateCheckoutSession, async (req, res, next) => {
@@ -86,4 +86,4 @@ router.get('/checkout-sessions', async (req, res, next) => {
     }
 });
 
-module.exports = router;
+export default router;

@@ -1,5 +1,5 @@
-const { DataTypes } = require('sequelize');
-const { sequelize } = require('../database/config');
+import { DataTypes  } from 'sequelize';
+import { sequelize  } from '../database/config.js';
 
 const Refund = sequelize.define('Refund', {
     id: {
@@ -67,4 +67,4 @@ const Refund = sequelize.define('Refund', {
     ]
 });
 
-module.exports = Refund;
+export default Refund;

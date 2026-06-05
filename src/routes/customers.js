@@ -1,7 +1,7 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const CustomerController = require('../controllers/CustomerController');
-const { validateCustomer } = require('../middleware/validation');
+import CustomerController from '../controllers/CustomerController.js';
+import { validateCustomer  } from '../middleware/validation.js';
 
 // Create Customer
 router.post('/create', validateCustomer, CustomerController.createCustomer.bind(CustomerController));
@@ -21,4 +21,4 @@ router.delete('/:id', CustomerController.deleteCustomer.bind(CustomerController)
 // List Customers
 router.get('/', CustomerController.listCustomers.bind(CustomerController));
 
-module.exports = router;
+export default router;

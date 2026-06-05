@@ -1,6 +1,6 @@
-require('dotenv').config();
-const { sequelize, testConnection } = require('./config');
-const models = require('../models');
+import 'dotenv/config';
+import { sequelize, testConnection  } from './config.js';
+import models from '../models/index.js';
 
 async function migrate() {
     try {

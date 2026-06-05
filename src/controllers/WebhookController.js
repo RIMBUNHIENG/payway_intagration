@@ -1,5 +1,5 @@
-const stripe = require('../config/stripe');
-const {
+import stripe from '../config/stripe.js';
+import {
     Payment,
     Customer,
     Subscription,
@@ -8,7 +8,7 @@ const {
     UserSubscription,
     SubscriptionHistory,
     User
-} = require('../models');
+} from '../models/index.js';
 
 class WebhookController {
     async handleWebhook(req, res) {
@@ -408,4 +408,4 @@ class WebhookController {
     }
 }
 
-module.exports = new WebhookController();
+export default new WebhookController();

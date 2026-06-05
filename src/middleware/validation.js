@@ -53,7 +53,7 @@ const validateRefund = (req, res, next) => {
     next();
 };
 
-module.exports = {
+export {
     validatePaymentIntent,
     validateCheckoutSession,
     validateCustomer,

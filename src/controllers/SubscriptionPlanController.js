@@ -1,6 +1,6 @@
-const { SubscriptionPlan } = require('../models');
-const stripe = require('../config/stripe');
-const { Op } = require('sequelize');
+import { SubscriptionPlan  } from '../models/index.js';
+import stripe from '../config/stripe.js';
+import { Op  } from 'sequelize';
 
 class SubscriptionPlanController {
     // Create subscription plan
@@ -228,4 +228,4 @@ class SubscriptionPlanController {
     }
 }
 
-module.exports = new SubscriptionPlanController();
+export default new SubscriptionPlanController();

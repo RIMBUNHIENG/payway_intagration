@@ -1,5 +1,5 @@
-const { DataTypes } = require('sequelize');
-const { sequelize } = require('../database/config');
+import { DataTypes  } from 'sequelize';
+import { sequelize  } from '../database/config.js';
 
 const WebhookEvent = sequelize.define('WebhookEvent', {
     id: {
@@ -56,4 +56,4 @@ const WebhookEvent = sequelize.define('WebhookEvent', {
     ]
 });
 
-module.exports = WebhookEvent;
+export default WebhookEvent;

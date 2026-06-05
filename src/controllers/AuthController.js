@@ -1,6 +1,6 @@
-const { User } = require('../models');
-const stripe = require('../config/stripe');
-const { generateToken } = require('../middleware/auth');
+import { User  } from '../models/index.js';
+import stripe from '../config/stripe.js';
+import { generateToken  } from '../middleware/auth.js';
 
 class AuthController {
     // Register new user
@@ -228,4 +228,4 @@ class AuthController {
     }
 }
 
-module.exports = new AuthController();
+export default new AuthController();

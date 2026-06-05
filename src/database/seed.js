@@ -1,15 +1,14 @@
-require('dotenv').config();
-const { sequelize, testConnection } = require('./config');
-const stripe = require('../config/stripe');
-const {
-    Customer,
+import 'dotenv/config';
+import { sequelize, testConnection  } from './config.js';
+import stripe from '../config/stripe.js';
+import { Customer,
     Product,
     Price,
     Payment,
     Refund,
     Subscription,
     WebhookEvent
-} = require('../models');
+ } from '../models/index.js';
 
 async function seed() {
     try {
