@@ -1,83 +1,37 @@
 import stripe from '../config/stripe.js';
-import { Payment, Customer, Refund  } from '../models/index.js';
 
 class PaymentController {
-    // Create Payment Intent
+    // Create Payment Intent for subscription
     async createPaymentIntent(req, res, next) {
         try {
-            const {
-                amount,
-                currency = 'usd',
-                description,
-                email,
-                metadata = {}
-            } = req.body;
+            const { amount, currency = 'usd', subscription_Plan_id } = req.body;
 
-            // Validate amount
             if (!amount || amount <= 0) {
                 return res.status(400).json({
-                    error: 'Invalid amount. Amount must be greater than 0.'
+                    error: 'Invalid amount'
                 });
             }
 
-            let customer = null;
-            let stripeCustomerId = null;
-
-            // Find or create customer if email provided
-            if (email) {
-                customer = await Customer.findOne({ where: { email } });
-
-                if (!customer) {
-                    const stripeCustomer = await stripe.customers.create({ email });
-                    customer = await Customer.create({
-                        stripeCustomerId: stripeCustomer.id,
-                        email: email
-                    });
-                }
-                stripeCustomerId = customer.stripeCustomerId;
-            }
-
-            // Create Payment Intent in Stripe
-            const paymentIntentData = {
-                amount: Math.round(amount),
-                currency: currency.toLowerCase(),
-                description: description || 'Payment',
-                metadata: {
-                    ...metadata,
-                    timestamp: new Date().toISOString()
-                },
+            // Create payment intent
+            const paymentIntent = await stripe.paymentIntents.create({
+                amount: Math.round(amount * 100), // Convert to cents
+                currency,
                 automatic_payment_methods: {
                     enabled: true,
                 },
-            };
-
-            if (stripeCustomerId) {
-                paymentIntentData.customer = stripeCustomerId;
-            }
-
-            const paymentIntent = await stripe.paymentIntents.create(paymentIntentData);
-
-            // Save to database
-            const payment = await Payment.create({
-                stripePaymentIntentId: paymentIntent.id,
-                customerId: customer ? customer.id : null,
-                amount: paymentIntent.amount,
-                currency: paymentIntent.currency,
-                status: paymentIntent.status,
-                description: description,
-                receiptEmail: email,
-                metadata: metadata
+                metadata: {
+                    subscription_Plan_id: subscription_Plan_id || '',
+                    user_id: req.userId || ''
+                }
             });
 
             res.json({
                 success: true,
                 clientSecret: paymentIntent.client_secret,
-                paymentIntentId: paymentIntent.id,
-                paymentId: payment.id,
-                amount: paymentIntent.amount,
-                currency: paymentIntent.currency
+                paymentIntentId: paymentIntent.id
             });
         } catch (error) {
+            console.error('Create payment intent error:', error);
             next(error);
         }
     }
@@ -85,66 +39,39 @@ class PaymentController {
     // Get Payment Intent
     async getPaymentIntent(req, res, next) {
         try {
-            const payment = await Payment.findOne({
-                where: { stripePaymentIntentId: req.params.id },
-                include: [
-                    {
-                        model: Customer,
-                        as: 'customer',
-                        attributes: ['id', 'email', 'name']
-                    },
-                    {
-                        model: Refund,
-                        as: 'refunds'
-                    }
-                ]
-            });
+            const { id } = req.params;
 
-            if (!payment) {
-                return res.status(404).json({ error: 'Payment not found' });
-            }
+            const paymentIntent = await stripe.paymentIntents.retrieve(id);
 
             res.json({
                 success: true,
-                payment: payment
+                paymentIntent: {
+                    id: paymentIntent.id,
+                    amount: paymentIntent.amount,
+                    currency: paymentIntent.currency,
+                    status: paymentIntent.status,
+                    client_secret: paymentIntent.client_secret
+                }
             });
         } catch (error) {
             next(error);
         }
     }
 
-    // Confirm Payment Intent
+    // Confirm Payment Intent (server-side)
     async confirmPaymentIntent(req, res, next) {
         try {
             const { paymentIntentId, paymentMethodId } = req.body;
 
-            if (!paymentIntentId || !paymentMethodId) {
-                return res.status(400).json({
-                    error: 'Payment Intent ID and Payment Method ID are required'
-                });
-            }
-
             const paymentIntent = await stripe.paymentIntents.confirm(paymentIntentId, {
-                payment_method: paymentMethodId,
+                payment_method: paymentMethodId
             });
-
-            // Update database
-            await Payment.update(
-                {
-                    status: paymentIntent.status,
-                    paymentMethod: paymentIntent.payment_method,
-                    paidAt: paymentIntent.status === 'succeeded' ? new Date() : null
-                },
-                { where: { stripePaymentIntentId: paymentIntentId } }
-            );
 
             res.json({
                 success: true,
                 paymentIntent: {
                     id: paymentIntent.id,
-                    status: paymentIntent.status,
-                    amount: paymentIntent.amount,
-                    currency: paymentIntent.currency
+                    status: paymentIntent.status
                 }
             });
         } catch (error) {
@@ -157,23 +84,14 @@ class PaymentController {
         try {
             const { paymentIntentId } = req.body;
 
-            if (!paymentIntentId) {
-                return res.status(400).json({ error: 'Payment Intent ID is required' });
-            }
-
             const paymentIntent = await stripe.paymentIntents.cancel(paymentIntentId);
-
-            // Update database
-            await Payment.update(
-                { status: 'canceled' },
-                { where: { stripePaymentIntentId: paymentIntentId } }
-            );
 
             res.json({
                 success: true,
-                message: 'Payment intent cancelled',
-                paymentIntentId: paymentIntent.id,
-                status: paymentIntent.status
+                paymentIntent: {
+                    id: paymentIntent.id,
+                    status: paymentIntent.status
+                }
             });
         } catch (error) {
             next(error);
@@ -183,55 +101,19 @@ class PaymentController {
     // Create Refund
     async createRefund(req, res, next) {
         try {
-            const { paymentIntentId, amount, reason } = req.body;
+            const { paymentIntentId, amount } = req.body;
 
-            if (!paymentIntentId) {
-                return res.status(400).json({ error: 'Payment Intent ID is required' });
-            }
-
-            // Find payment in database
-            const payment = await Payment.findOne({
-                where: { stripePaymentIntentId: paymentIntentId }
-            });
-
-            if (!payment) {
-                return res.status(404).json({ error: 'Payment not found' });
-            }
-
-            const refundData = {
+            const refund = await stripe.refunds.create({
                 payment_intent: paymentIntentId,
-            };
-
-            if (amount) {
-                refundData.amount = Math.round(amount);
-            }
-
-            if (reason) {
-                refundData.reason = reason;
-            }
-
-            const refund = await stripe.refunds.create(refundData);
-
-            // Save to database
-            const refundRecord = await Refund.create({
-                stripeRefundId: refund.id,
-                paymentId: payment.id,
-                amount: refund.amount,
-                currency: refund.currency,
-                reason: refund.reason,
-                status: refund.status,
-                refundedAt: refund.status === 'succeeded' ? new Date() : null
+                amount: amount ? Math.round(amount * 100) : undefined
             });
 
             res.json({
                 success: true,
                 refund: {
                     id: refund.id,
-                    refundId: refundRecord.id,
                     amount: refund.amount,
-                    currency: refund.currency,
-                    status: refund.status,
-                    reason: refund.reason
+                    status: refund.status
                 }
             });
         } catch (error) {
@@ -239,39 +121,18 @@ class PaymentController {
         }
     }
 
-    // List Payments
+    // List payments
     async listPayments(req, res, next) {
         try {
-            const { limit = 10, page = 1, status, customerId } = req.query;
-            const offset = (page - 1) * limit;
+            const { limit = 10 } = req.query;
 
-            const where = {};
-            if (status) where.status = status;
-            if (customerId) where.customerId = customerId;
-
-            const { count, rows } = await Payment.findAndCountAll({
-                where,
-                limit: parseInt(limit),
-                offset: offset,
-                include: [
-                    {
-                        model: Customer,
-                        as: 'customer',
-                        attributes: ['id', 'email', 'name']
-                    }
-                ],
-                order: [['createdAt', 'DESC']]
+            const paymentIntents = await stripe.paymentIntents.list({
+                limit: parseInt(limit)
             });
 
             res.json({
                 success: true,
-                payments: rows,
-                pagination: {
-                    total: count,
-                    page: parseInt(page),
-                    limit: parseInt(limit),
-                    totalPages: Math.ceil(count / limit)
-                }
+                paymentIntents: paymentIntents.data
             });
         } catch (error) {
             next(error);

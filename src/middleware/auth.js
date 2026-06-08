@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import { User } from '../models/index.js';
+import { User, UsersType } from '../models/index.js';
 
 // JWT Secret (should be in .env)
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-this-in-production';
@@ -9,9 +9,9 @@ const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
 const generateToken = (user) => {
     return jwt.sign(
         {
-            id: user.id,
+            id: user.user_id,
             email: user.email,
-            role: user.role
+            user_type_id: user.user_type_id
         },
         JWT_SECRET,
         { expiresIn: JWT_EXPIRES_IN }
@@ -36,10 +36,15 @@ const authenticate = async (req, res, next) => {
         // Verify token
         const decoded = jwt.verify(token, JWT_SECRET);
 
-        // Get user from database
-        const user = await User.findByPk(decoded.id);
+        // Get user from database with user type
+        const user = await User.findByPk(decoded.id, {
+            include: [{
+                model: UsersType,
+                as: 'userType'
+            }]
+        });
 
-        if (!user || !user.isActive) {
+        if (!user || user.status !== 'active') {
             return res.status(401).json({
                 error: 'Authentication failed',
                 message: 'User not found or inactive'
@@ -48,8 +53,8 @@ const authenticate = async (req, res, next) => {
 
         // Attach user to request
         req.user = user;
-        req.userId = user.id;
-        req.userRole = user.role;
+        req.userId = user.user_id;
+        req.userType = user.userType?.user_type_name;
 
         next();
     } catch (error) {
@@ -75,8 +80,8 @@ const authenticate = async (req, res, next) => {
     }
 };
 
-// Middleware to check user role
-const authorize = (...allowedRoles) => {
+// Middleware to check user type/role
+const authorize = (...allowedUserTypes) => {
     return (req, res, next) => {
         if (!req.user) {
             return res.status(401).json({
@@ -85,10 +90,10 @@ const authorize = (...allowedRoles) => {
             });
         }
 
-        if (!allowedRoles.includes(req.user.role)) {
+        if (!allowedUserTypes.includes(req.userType)) {
             return res.status(403).json({
                 error: 'Access denied',
-                message: `This action requires one of these roles: ${allowedRoles.join(', ')}`
+                message: `This action requires one of these user types: ${allowedUserTypes.join(', ')}`
             });
         }
 
@@ -107,12 +112,17 @@ const optionalAuth = async (req, res, next) => {
 
         const token = authHeader.substring(7);
         const decoded = jwt.verify(token, JWT_SECRET);
-        const user = await User.findByPk(decoded.id);
+        const user = await User.findByPk(decoded.id, {
+            include: [{
+                model: UsersType,
+                as: 'userType'
+            }]
+        });
 
-        if (user && user.isActive) {
+        if (user && user.status === 'active') {
             req.user = user;
-            req.userId = user.id;
-            req.userRole = user.role;
+            req.userId = user.user_id;
+            req.userType = user.userType?.user_type_name;
         }
 
         next();

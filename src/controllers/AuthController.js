@@ -1,12 +1,11 @@
-import { User  } from '../models/index.js';
-import stripe from '../config/stripe.js';
-import { generateToken  } from '../middleware/auth.js';
+import { User, UsersType } from '../models/index.js';
+import { generateToken } from '../middleware/auth.js';
 
 class AuthController {
     // Register new user
     async register(req, res, next) {
         try {
-            const { email, password, name } = req.body;
+            const { email, password, user_type_name = 'user' } = req.body;
 
             // Validation
             if (!email || !password) {
@@ -32,20 +31,24 @@ class AuthController {
                 });
             }
 
-            // Create Stripe customer
-            const stripeCustomer = await stripe.customers.create({
-                email: email,
-                name: name,
-                metadata: { source: 'registration' }
+            // Get user type
+            const userType = await UsersType.findOne({
+                where: { user_type_name }
             });
+
+            if (!userType) {
+                return res.status(400).json({
+                    error: 'Registration failed',
+                    message: 'Invalid user type'
+                });
+            }
 
             // Create user
             const user = await User.create({
                 email,
                 password, // Will be hashed by model hook
-                name,
-                stripeCustomerId: stripeCustomer.id,
-                role: 'user'
+                user_type_id: userType.user_type_id,
+                status: 'active'
             });
 
             // Generate token
@@ -75,8 +78,15 @@ class AuthController {
                 });
             }
 
-            // Find user
-            const user = await User.findOne({ where: { email } });
+            // Find user with user type
+            const user = await User.findOne({
+                where: { email },
+                include: [{
+                    model: UsersType,
+                    as: 'userType',
+                    attributes: ['user_type_name']
+                }]
+            });
 
             if (!user) {
                 return res.status(401).json({
@@ -85,7 +95,7 @@ class AuthController {
                 });
             }
 
-            if (!user.isActive) {
+            if (user.status !== 'active') {
                 return res.status(401).json({
                     error: 'Login failed',
                     message: 'Account is inactive'
@@ -102,8 +112,7 @@ class AuthController {
                 });
             }
 
-            // Update last login
-            await user.update({ lastLogin: new Date() });
+            // Update timestamps handled by Sequelize
 
             // Generate token
             const token = generateToken(user);
@@ -123,7 +132,12 @@ class AuthController {
     async getProfile(req, res, next) {
         try {
             const user = await User.findByPk(req.userId, {
-                attributes: { exclude: ['password'] }
+                attributes: { exclude: ['password'] },
+                include: [{
+                    model: UsersType,
+                    as: 'userType',
+                    attributes: ['user_type_name']
+                }]
             });
 
             if (!user) {
@@ -144,7 +158,7 @@ class AuthController {
     // Update user profile
     async updateProfile(req, res, next) {
         try {
-            const { name, metadata } = req.body;
+            const { status } = req.body;
 
             const user = await User.findByPk(req.userId);
 
@@ -155,18 +169,9 @@ class AuthController {
             }
 
             const updateData = {};
-            if (name) updateData.name = name;
-            if (metadata) updateData.metadata = { ...user.metadata, ...metadata };
+            if (status) updateData.status = status;
 
             await user.update(updateData);
-
-            // Update Stripe customer
-            if (user.stripeCustomerId) {
-                await stripe.customers.update(user.stripeCustomerId, {
-                    name: user.name,
-                    metadata: user.metadata
-                });
-            }
 
             res.json({
                 success: true,

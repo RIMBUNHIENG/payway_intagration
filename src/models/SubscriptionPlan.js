@@ -1,108 +1,44 @@
-import { DataTypes  } from 'sequelize';
-import { sequelize  } from '../database/config.js';
+import { DataTypes } from 'sequelize';
+import { sequelize } from '../database/config.js';
 
-const SubscriptionPlan = sequelize.define('SubscriptionPlan', {
-    id: {
+const NewSubscriptionPlan = sequelize.define('NewSubscriptionPlan', {
+    subscription_Plan_id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
-        autoIncrement: true
+        autoIncrement: true,
+        field: 'subscription_Plan_id'
+    },
+    admin_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: 'users', // Assuming admin is a user
+            key: 'user_id'
+        }
     },
     name: {
-        type: DataTypes.STRING,
+        type: DataTypes.STRING(200),
+        allowNull: false
+    },
+    price: {
+        type: DataTypes.DECIMAL(10, 3),
         allowNull: false,
-        comment: 'Plan name (e.g., Basic, Premium, Enterprise)'
+        comment: 'Price with 3 decimal places (e.g., 242.000)'
+    },
+    duration_day: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        comment: 'Duration in days'
     },
     description: {
-        type: DataTypes.TEXT,
+        type: DataTypes.STRING(255),
         allowNull: true
-    },
-    stripePriceId: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        unique: true,
-        field: 'stripe_price_id',
-        comment: 'Stripe Price ID'
-    },
-    stripeProductId: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        field: 'stripe_product_id',
-        comment: 'Stripe Product ID'
-    },
-    amount: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        comment: 'Price in cents'
-    },
-    currency: {
-        type: DataTypes.STRING(3),
-        defaultValue: 'usd'
-    },
-    interval: {
-        type: DataTypes.ENUM('day', 'week', 'month', 'year'),
-        allowNull: false,
-        comment: 'Billing interval'
-    },
-    intervalCount: {
-        type: DataTypes.INTEGER,
-        defaultValue: 1,
-        field: 'interval_count',
-        comment: 'Number of intervals between billings'
-    },
-    trialPeriodDays: {
-        type: DataTypes.INTEGER,
-        defaultValue: 0,
-        field: 'trial_period_days',
-        comment: 'Free trial days'
-    },
-    features: {
-        type: DataTypes.JSON,
-        defaultValue: [],
-        comment: 'Array of plan features'
-    },
-    limits: {
-        type: DataTypes.JSON,
-        defaultValue: {},
-        comment: 'Usage limits (users, storage, etc.)'
-    },
-    isActive: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: true,
-        field: 'is_active'
-    },
-    isPopular: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: false,
-        field: 'is_popular',
-        comment: 'Flag for featured/popular plans'
-    },
-    sortOrder: {
-        type: DataTypes.INTEGER,
-        defaultValue: 0,
-        field: 'sort_order',
-        comment: 'Display order'
-    },
-    metadata: {
-        type: DataTypes.JSON,
-        defaultValue: {}
     }
 }, {
-    tableName: 'subscription_plans',
-    indexes: [
-        {
-            unique: true,
-            fields: ['stripe_price_id']
-        },
-        {
-            fields: ['is_active']
-        },
-        {
-            fields: ['interval']
-        },
-        {
-            fields: ['sort_order']
-        }
-    ]
+    tableName: 'subscription_Plan',
+    timestamps: true, // This will add createdAt and updatedAt
+    createdAt: 'create_date',
+    updatedAt: 'update_date'
 });
 
-export default SubscriptionPlan;
+export default NewSubscriptionPlan;

@@ -1,126 +1,69 @@
-import Customer from './Customer.js';
-import Product from './Product.js';
-import Price from './Price.js';
-import Payment from './Payment.js';
-import Refund from './Refund.js';
-import Subscription from './Subscription.js';
-import WebhookEvent from './WebhookEvent.js';
+import { sequelize } from '../database/config.js';
+
+// Import all models based on your ERD
+import Mentor from './Mentor.js';
+import UsersType from './UsersType.js';
 import User from './User.js';
 import SubscriptionPlan from './SubscriptionPlan.js';
-import UserSubscription from './UserSubscription.js';
-import SubscriptionHistory from './SubscriptionHistory.js';
+import Subscription from './Subscription.js';
 
-// Define Relationships
+// Define relationships based on your ERD
 
-// Product -> Price (One to Many)
-Product.hasMany(Price, {
-    foreignKey: 'product_id',
-    as: 'prices',
-    onDelete: 'CASCADE'
+// Users belongs to UsersType
+User.belongsTo(UsersType, {
+    foreignKey: 'user_type_id',
+    as: 'userType'
 });
-Price.belongsTo(Product, {
-    foreignKey: 'product_id',
-    as: 'product'
+UsersType.hasMany(User, {
+    foreignKey: 'user_type_id',
+    as: 'users'
 });
 
-// Customer -> Payment (One to Many)
-Customer.hasMany(Payment, {
-    foreignKey: 'customer_id',
-    as: 'payments',
-    onDelete: 'SET NULL'
+// SubscriptionPlan belongs to admin (User)
+SubscriptionPlan.belongsTo(User, {
+    foreignKey: 'admin_id',
+    as: 'admin'
 });
-Payment.belongsTo(Customer, {
-    foreignKey: 'customer_id',
-    as: 'customer'
-});
-
-// Payment -> Refund (One to Many)
-Payment.hasMany(Refund, {
-    foreignKey: 'payment_id',
-    as: 'refunds',
-    onDelete: 'CASCADE'
-});
-Refund.belongsTo(Payment, {
-    foreignKey: 'payment_id',
-    as: 'payment'
+User.hasMany(SubscriptionPlan, {
+    foreignKey: 'admin_id',
+    as: 'createdPlans'
 });
 
-// Customer -> Subscription (One to Many)
-Customer.hasMany(Subscription, {
-    foreignKey: 'customer_id',
-    as: 'subscriptions',
-    onDelete: 'CASCADE'
+// Subscription belongs to SubscriptionPlan
+Subscription.belongsTo(SubscriptionPlan, {
+    foreignKey: 'subscription_Plan_id',
+    as: 'subscriptionPlan'
 });
-Subscription.belongsTo(Customer, {
-    foreignKey: 'customer_id',
-    as: 'customer'
-});
-
-// Price -> Subscription (One to Many)
-Price.hasMany(Subscription, {
-    foreignKey: 'price_id',
-    as: 'subscriptions',
-    onDelete: 'RESTRICT'
-});
-Subscription.belongsTo(Price, {
-    foreignKey: 'price_id',
-    as: 'price'
+SubscriptionPlan.hasMany(Subscription, {
+    foreignKey: 'subscription_Plan_id',
+    as: 'subscriptions'
 });
 
-// User -> UserSubscription (One to Many)
-User.hasMany(UserSubscription, {
-    foreignKey: 'user_id',
-    as: 'subscriptions',
-    onDelete: 'CASCADE'
-});
-UserSubscription.belongsTo(User, {
+// Subscription belongs to User
+Subscription.belongsTo(User, {
     foreignKey: 'user_id',
     as: 'user'
 });
-
-// SubscriptionPlan -> UserSubscription (One to Many)
-SubscriptionPlan.hasMany(UserSubscription, {
-    foreignKey: 'plan_id',
-    as: 'subscriptions',
-    onDelete: 'RESTRICT'
-});
-UserSubscription.belongsTo(SubscriptionPlan, {
-    foreignKey: 'plan_id',
-    as: 'plan'
-});
-
-// User -> SubscriptionHistory (One to Many)
-User.hasMany(SubscriptionHistory, {
+User.hasMany(Subscription, {
     foreignKey: 'user_id',
-    as: 'subscription_history',
-    onDelete: 'CASCADE'
-});
-SubscriptionHistory.belongsTo(User, {
-    foreignKey: 'user_id',
-    as: 'user'
+    as: 'subscriptions'
 });
 
-// UserSubscription -> SubscriptionHistory (One to Many)
-UserSubscription.hasMany(SubscriptionHistory, {
-    foreignKey: 'subscription_id',
-    as: 'history',
-    onDelete: 'CASCADE'
+// Subscription belongs to UsersType
+Subscription.belongsTo(UsersType, {
+    foreignKey: 'user_type_id',
+    as: 'userType'
 });
-SubscriptionHistory.belongsTo(UserSubscription, {
-    foreignKey: 'subscription_id',
-    as: 'subscription'
+UsersType.hasMany(Subscription, {
+    foreignKey: 'user_type_id',
+    as: 'subscriptions'
 });
 
 export {
-    Customer,
-    Product,
-    Price,
-    Payment,
-    Refund,
-    Subscription,
-    WebhookEvent,
+    sequelize,
+    Mentor,
+    UsersType,
     User,
     SubscriptionPlan,
-    UserSubscription,
-    SubscriptionHistory
+    Subscription
 };

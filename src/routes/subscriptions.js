@@ -1,6 +1,6 @@
 import express from 'express';
 const router = express.Router();
-import * as SubscriptionController from '../controllers/SubscriptionController.js';
+import SubscriptionController from '../controllers/SubscriptionController.js';
 import { authenticate, authorize } from '../middleware/auth.js';
 
 /**
@@ -11,40 +11,7 @@ import { authenticate, authorize } from '../middleware/auth.js';
 router.post('/subscribe',
     authenticate,
     authorize('user', 'admin'),
-    SubscriptionController.subscribe
-);
-
-/**
- * @route   POST /api/subscriptions/:id/cancel
- * @desc    Cancel a subscription
- * @access  Private (user, admin)
- */
-router.post('/:id/cancel',
-    authenticate,
-    authorize('user', 'admin'),
-    SubscriptionController.cancelSubscription
-);
-
-/**
- * @route   POST /api/subscriptions/:id/resume
- * @desc    Resume a canceled subscription
- * @access  Private (user, admin)
- */
-router.post('/:id/resume',
-    authenticate,
-    authorize('user', 'admin'),
-    SubscriptionController.resumeSubscription
-);
-
-/**
- * @route   POST /api/subscriptions/:id/upgrade
- * @desc    Upgrade or downgrade subscription plan
- * @access  Private (user, admin)
- */
-router.post('/:id/upgrade',
-    authenticate,
-    authorize('user', 'admin'),
-    SubscriptionController.upgradeSubscription
+    SubscriptionController.subscribe.bind(SubscriptionController)
 );
 
 /**
@@ -55,7 +22,7 @@ router.post('/:id/upgrade',
 router.get('/my-subscriptions',
     authenticate,
     authorize('user', 'admin'),
-    SubscriptionController.listUserSubscriptions
+    SubscriptionController.getUserSubscriptions.bind(SubscriptionController)
 );
 
 /**
@@ -66,18 +33,40 @@ router.get('/my-subscriptions',
 router.get('/:id',
     authenticate,
     authorize('user', 'admin'),
-    SubscriptionController.getSubscription
+    SubscriptionController.getSubscription.bind(SubscriptionController)
 );
 
 /**
- * @route   GET /api/subscriptions/:id/history
- * @desc    Get subscription history/audit trail
+ * @route   POST /api/subscriptions/:id/cancel
+ * @desc    Cancel a subscription
  * @access  Private (user, admin)
  */
-router.get('/:id/history',
+router.post('/:id/cancel',
     authenticate,
     authorize('user', 'admin'),
-    SubscriptionController.getSubscriptionHistory
+    SubscriptionController.cancelSubscription.bind(SubscriptionController)
+);
+
+/**
+ * @route   POST /api/subscriptions/:id/extend
+ * @desc    Extend a subscription
+ * @access  Private (user, admin)
+ */
+router.post('/:id/extend',
+    authenticate,
+    authorize('user', 'admin'),
+    SubscriptionController.extendSubscription.bind(SubscriptionController)
+);
+
+/**
+ * @route   GET /api/subscriptions (admin only)
+ * @desc    Get all subscriptions
+ * @access  Private (admin)
+ */
+router.get('/',
+    authenticate,
+    authorize('admin'),
+    SubscriptionController.getAllSubscriptions.bind(SubscriptionController)
 );
 
 export default router;

@@ -1,6 +1,5 @@
-import { SubscriptionPlan  } from '../models/index.js';
-import stripe from '../config/stripe.js';
-import { Op  } from 'sequelize';
+import { SubscriptionPlan, User } from '../models/index.js';
+import { Op } from 'sequelize';
 
 class SubscriptionPlanController {
     // Create subscription plan
@@ -9,58 +8,36 @@ class SubscriptionPlanController {
             const {
                 name,
                 description,
-                amount,
-                currency = 'usd',
-                interval,
-                intervalCount = 1,
-                trialPeriodDays = 0,
-                features = [],
-                limits = {},
-                isPopular = false,
-                sortOrder = 0
+                price, // Now using DECIMAL price directly
+                duration_day
             } = req.body;
 
             // Validation
-            if (!name || !amount || !interval) {
+            if (!name || !price || !duration_day) {
                 return res.status(400).json({
                     error: 'Validation error',
-                    message: 'Name, amount, and interval are required'
+                    message: 'Name, price, and duration_day are required'
                 });
             }
 
-            // Create product in Stripe
-            const stripeProduct = await stripe.products.create({
-                name,
-                description,
-                metadata: { type: 'subscription' }
-            });
+            // Validate price is a positive number
+            if (price <= 0) {
+                return res.status(400).json({
+                    error: 'Validation error',
+                    message: 'Price must be a positive number'
+                });
+            }
 
-            // Create price in Stripe
-            const stripePrice = await stripe.prices.create({
-                product: stripeProduct.id,
-                unit_amount: Math.round(amount),
-                currency: currency.toLowerCase(),
-                recurring: {
-                    interval,
-                    interval_count: intervalCount
-                }
-            });
+            // Get admin user ID from JWT token
+            const admin_id = req.userId;
 
-            // Create plan in database
+            // Create plan in database with DECIMAL price
             const plan = await SubscriptionPlan.create({
+                admin_id,
                 name,
                 description,
-                stripePriceId: stripePrice.id,
-                stripeProductId: stripeProduct.id,
-                amount,
-                currency,
-                interval,
-                intervalCount,
-                trialPeriodDays,
-                features,
-                limits,
-                isPopular,
-                sortOrder
+                price: parseFloat(price), // Store as decimal (e.g., 242.000)
+                duration_day: parseInt(duration_day)
             });
 
             res.status(201).json({
@@ -73,24 +50,16 @@ class SubscriptionPlanController {
         }
     }
 
-    // List all active plans
+    // List all plans
     async listPlans(req, res, next) {
         try {
-            const { interval, includeInactive = false } = req.query;
-
-            const where = {};
-
-            if (!includeInactive || includeInactive === 'false') {
-                where.isActive = true;
-            }
-
-            if (interval) {
-                where.interval = interval;
-            }
-
             const plans = await SubscriptionPlan.findAll({
-                where,
-                order: [['sortOrder', 'ASC'], ['amount', 'ASC']]
+                include: [{
+                    model: User,
+                    as: 'admin',
+                    attributes: ['user_id', 'email']
+                }],
+                order: [['price', 'ASC']]
             });
 
             res.json({
@@ -105,7 +74,13 @@ class SubscriptionPlanController {
     // Get single plan
     async getPlan(req, res, next) {
         try {
-            const plan = await SubscriptionPlan.findByPk(req.params.id);
+            const plan = await SubscriptionPlan.findByPk(req.params.id, {
+                include: [{
+                    model: User,
+                    as: 'admin',
+                    attributes: ['user_id', 'email']
+                }]
+            });
 
             if (!plan) {
                 return res.status(404).json({
@@ -128,11 +103,8 @@ class SubscriptionPlanController {
             const {
                 name,
                 description,
-                features,
-                limits,
-                isActive,
-                isPopular,
-                sortOrder
+                price,
+                duration_day
             } = req.body;
 
             const plan = await SubscriptionPlan.findByPk(req.params.id);
@@ -143,24 +115,30 @@ class SubscriptionPlanController {
                 });
             }
 
+            // Check if user is admin who created this plan or super admin
+            if (plan.admin_id !== req.userId) {
+                // You could add super admin check here if needed
+                return res.status(403).json({
+                    error: 'Access denied',
+                    message: 'You can only update your own plans'
+                });
+            }
+
             const updateData = {};
             if (name) updateData.name = name;
             if (description !== undefined) updateData.description = description;
-            if (features) updateData.features = features;
-            if (limits) updateData.limits = limits;
-            if (isActive !== undefined) updateData.isActive = isActive;
-            if (isPopular !== undefined) updateData.isPopular = isPopular;
-            if (sortOrder !== undefined) updateData.sortOrder = sortOrder;
+            if (price) {
+                if (price <= 0) {
+                    return res.status(400).json({
+                        error: 'Validation error',
+                        message: 'Price must be a positive number'
+                    });
+                }
+                updateData.price = parseFloat(price);
+            }
+            if (duration_day) updateData.duration_day = parseInt(duration_day);
 
             await plan.update(updateData);
-
-            // Update Stripe product if name/description changed
-            if (name || description) {
-                await stripe.products.update(plan.stripeProductId, {
-                    name: plan.name,
-                    description: plan.description
-                });
-            }
 
             res.json({
                 success: true,
@@ -172,8 +150,8 @@ class SubscriptionPlanController {
         }
     }
 
-    // Deactivate plan
-    async deactivatePlan(req, res, next) {
+    // Delete plan
+    async deletePlan(req, res, next) {
         try {
             const plan = await SubscriptionPlan.findByPk(req.params.id);
 
@@ -183,11 +161,19 @@ class SubscriptionPlanController {
                 });
             }
 
-            await plan.update({ isActive: false });
+            // Check if user is admin who created this plan
+            if (plan.admin_id !== req.userId) {
+                return res.status(403).json({
+                    error: 'Access denied',
+                    message: 'You can only delete your own plans'
+                });
+            }
+
+            await plan.destroy();
 
             res.json({
                 success: true,
-                message: 'Plan deactivated successfully'
+                message: 'Plan deleted successfully'
             });
         } catch (error) {
             next(error);
@@ -210,12 +196,16 @@ class SubscriptionPlanController {
 
             const plans = await SubscriptionPlan.findAll({
                 where: {
-                    id: {
+                    subscription_Plan_id: {
                         [Op.in]: ids
-                    },
-                    isActive: true
+                    }
                 },
-                order: [['amount', 'ASC']]
+                include: [{
+                    model: User,
+                    as: 'admin',
+                    attributes: ['user_id', 'email']
+                }],
+                order: [['price', 'ASC']]
             });
 
             res.json({

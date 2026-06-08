@@ -1,15 +1,28 @@
-import { DataTypes  } from 'sequelize';
-import { sequelize  } from '../database/config.js';
+import { DataTypes } from 'sequelize';
+import { sequelize } from '../database/config.js';
 import bcrypt from 'bcrypt';
 
-const User = sequelize.define('User', {
-    id: {
+const NewUser = sequelize.define('NewUser', {
+    user_id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true
     },
-    email: {
+    user_type_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: 'users_type',
+            key: 'user_type_id'
+        }
+    },
+    status: {
         type: DataTypes.STRING,
+        allowNull: false,
+        defaultValue: 'active'
+    },
+    email: {
+        type: DataTypes.STRING(100),
         allowNull: false,
         unique: true,
         validate: {
@@ -17,52 +30,22 @@ const User = sequelize.define('User', {
         }
     },
     password: {
-        type: DataTypes.STRING,
+        type: DataTypes.STRING(255),
         allowNull: false
     },
-    name: {
-        type: DataTypes.STRING,
-        allowNull: true
-    },
-    role: {
-        type: DataTypes.ENUM('admin', 'user', 'guest'),
-        defaultValue: 'user'
-    },
-    stripeCustomerId: {
-        type: DataTypes.STRING,
-        allowNull: true,
-        unique: true,
-        field: 'stripe_customer_id'
-    },
-    isActive: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: true,
-        field: 'is_active'
-    },
-    lastLogin: {
+    create_date: {
         type: DataTypes.DATE,
-        allowNull: true,
-        field: 'last_login'
+        defaultValue: DataTypes.NOW,
+        field: 'create_date'
     },
-    metadata: {
-        type: DataTypes.JSON,
-        defaultValue: {},
-        comment: 'Additional user information'
+    update_date: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
+        field: 'update_date'
     }
 }, {
     tableName: 'users',
-    indexes: [
-        {
-            unique: true,
-            fields: ['email']
-        },
-        {
-            fields: ['stripe_customer_id']
-        },
-        {
-            fields: ['role']
-        }
-    ],
+    timestamps: false, // Using custom timestamp fields
     hooks: {
         beforeCreate: async (user) => {
             if (user.password) {
@@ -76,16 +59,15 @@ const User = sequelize.define('User', {
         }
     }
 });
-
 // Instance method to compare password
-User.prototype.comparePassword = async function (candidatePassword) {
-    return await bcrypt.compare(candidatePassword, this.password);
+NewUser.prototype.comparePassword = async function (candidatePassword) {
+    return bcrypt.compare(candidatePassword, this.password);
 };
 
-// Instance method to get safe user data (without password)
-User.prototype.toSafeObject = function () {
+// Instance method to get safe object (without password)
+NewUser.prototype.toSafeObject = function () {
     const { password, ...safeUser } = this.toJSON();
     return safeUser;
 };
 
-export default User;
+export default NewUser;

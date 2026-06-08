@@ -6,13 +6,15 @@ import { sequelize, testConnection } from './src/database/config.js';
 
 // Import routes
 import paymentsRouter from './src/routes/payments.js';
-import checkoutRouter from './src/routes/checkout.js';
-import customersRouter from './src/routes/customers.js';
-import productsRouter from './src/routes/products.js';
-import webhooksRouter from './src/routes/webhooks.js';
 import authRouter from './src/routes/auth.js';
 import subscriptionPlansRouter from './src/routes/subscription-plans.js';
 import subscriptionsRouter from './src/routes/subscriptions.js';
+
+// Legacy routes (commented out - using new ERD structure)
+// import checkoutRouter from './src/routes/checkout.js';
+// import customersRouter from './src/routes/customers.js';
+// import productsRouter from './src/routes/products.js';
+// import webhooksRouter from './src/routes/webhooks.js';
 
 // Import middleware
 import errorHandler from './src/middleware/errorHandler.js';
@@ -29,10 +31,7 @@ testConnection();
 // Middleware
 app.use(cors());
 
-// Webhook route must use raw body parser - mount before JSON parser
-app.use('/api/webhook', webhooksRouter);
-
-// JSON body parser for all other routes
+// JSON body parser for all routes
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
@@ -47,23 +46,16 @@ app.get('/', (req, res) => {
             auth: '/api/auth/*',
             subscriptionPlans: '/api/subscription-plans/*',
             subscriptions: '/api/subscriptions/*',
-            payments: '/api/payments/*',
-            checkout: '/api/checkout/*',
-            customers: '/api/customers/*',
-            products: '/api/products/*',
-            webhook: '/api/webhook'
+            payments: '/api/payments/*'
         }
     });
 });
 
-// API Routes
+// API Routes (New ERD Structure with Stripe Payments)
 app.use('/api/auth', authRouter);
 app.use('/api/subscription-plans', subscriptionPlansRouter);
 app.use('/api/subscriptions', subscriptionsRouter);
 app.use('/api/payments', paymentsRouter);
-app.use('/api/checkout', checkoutRouter);
-app.use('/api/customers', customersRouter);
-app.use('/api/products', productsRouter);
 
 // Error handling middleware (must be last)
 app.use(errorHandler);
@@ -95,17 +87,15 @@ app.listen(PORT, () => {
     console.log(`   GET  /api/subscription-plans`);
     console.log(`   POST /api/subscription-plans (admin)`);
     console.log(`   PUT  /api/subscription-plans/:id (admin)`);
-    console.log(`\n   Subscriptions:`);
+    console.log(`   DELETE /api/subscription-plans/:id (admin)`);
+    console.log(`\n   Subscriptions (with Stripe payment):`);
     console.log(`   POST /api/subscriptions/subscribe`);
     console.log(`   GET  /api/subscriptions/my-subscriptions`);
     console.log(`   GET  /api/subscriptions/:id`);
     console.log(`   POST /api/subscriptions/:id/cancel`);
-    console.log(`   POST /api/subscriptions/:id/resume`);
-    console.log(`   POST /api/subscriptions/:id/upgrade`);
-    console.log(`   GET  /api/subscriptions/:id/history`);
-    console.log(`\n   Payments:`);
+    console.log(`   POST /api/subscriptions/:id/extend`);
+    console.log(`\n   Payments (Stripe):`);
     console.log(`   POST /api/payments/create-payment-intent`);
-    console.log(`   GET  /api/payments (List all)`);
-    console.log(`   POST /api/payments/refund`);
+    console.log(`   GET  /api/payments/payment-intent/:id`);
     console.log(`\n💡 Run 'npm run db:migrate' to create database tables`);
 });

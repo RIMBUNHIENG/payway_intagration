@@ -1,101 +1,51 @@
-import { DataTypes  } from 'sequelize';
-import { sequelize  } from '../database/config.js';
+import { DataTypes } from 'sequelize';
+import { sequelize } from '../database/config.js';
 
-const Subscription = sequelize.define('Subscription', {
-    id: {
+const NewSubscription = sequelize.define('NewSubscription', {
+    subscription_id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true
     },
-    stripeSubscriptionId: {
-        type: DataTypes.STRING,
-        unique: true,
-        allowNull: false,
-        field: 'stripe_subscription_id'
-    },
-    customerId: {
+    subscription_Plan_id: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        field: 'customer_id',
+        field: 'subscription_Plan_id',
         references: {
-            model: 'customers',
-            key: 'id'
+            model: 'subscription_Plan',
+            key: 'subscription_Plan_id'
         }
     },
-    priceId: {
+    user_id: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        field: 'price_id',
         references: {
-            model: 'prices',
-            key: 'id'
+            model: 'users',
+            key: 'user_id'
         }
     },
-    status: {
-        type: DataTypes.ENUM(
-            'incomplete',
-            'incomplete_expired',
-            'trialing',
-            'active',
-            'past_due',
-            'canceled',
-            'unpaid'
-        ),
+    start_date: {
+        type: DataTypes.DATE,
         allowNull: false,
-        defaultValue: 'incomplete'
+        defaultValue: DataTypes.NOW
     },
-    currentPeriodStart: {
+    end_date: {
         type: DataTypes.DATE,
-        allowNull: true,
-        field: 'current_period_start'
+        allowNull: false
     },
-    currentPeriodEnd: {
-        type: DataTypes.DATE,
-        allowNull: true,
-        field: 'current_period_end'
-    },
-    canceledAt: {
-        type: DataTypes.DATE,
-        allowNull: true,
-        field: 'canceled_at'
-    },
-    cancelAtPeriodEnd: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: false,
-        field: 'cancel_at_period_end'
-    },
-    trialStart: {
-        type: DataTypes.DATE,
-        allowNull: true,
-        field: 'trial_start'
-    },
-    trialEnd: {
-        type: DataTypes.DATE,
-        allowNull: true,
-        field: 'trial_end'
-    },
-    metadata: {
-        type: DataTypes.JSON,
-        allowNull: true,
-        defaultValue: {}
+    user_type_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: 'users_type',
+            key: 'user_type_id'
+        }
     }
 }, {
-    tableName: 'subscriptions',
-    indexes: [
-        {
-            unique: true,
-            fields: ['stripe_subscription_id']
-        },
-        {
-            fields: ['customer_id']
-        },
-        {
-            fields: ['status']
-        },
-        {
-            fields: ['current_period_end']
-        }
-    ]
+    tableName: 'subscription',
+    timestamps: true, // This will add createdAt and updatedAt
+    createdAt: 'create_date',
+    updatedAt: 'update_date'
 });
 
-export default Subscription;
+export default NewSubscription;
