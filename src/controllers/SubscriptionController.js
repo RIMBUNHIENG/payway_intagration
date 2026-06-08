@@ -1,9 +1,10 @@
 import stripe from '../config/stripe.js';
-import { UserSubscription,
+import {
+    UserSubscription,
     SubscriptionHistory,
     SubscriptionPlan,
     User
- } from '../models/index.js';
+} from '../models/index.js';
 
 /**
  * Subscribe to a Subscription Plan
@@ -26,7 +27,7 @@ export const subscribe = async (req, res, next) => {
             return res.status(404).json({ error: 'Subscription plan not found' });
         }
 
-        if (plan.status !== 'active') {
+        if (!plan.isActive) {
             return res.status(400).json({ error: 'Subscription plan is not active' });
         }
 
@@ -57,7 +58,7 @@ export const subscribe = async (req, res, next) => {
         if (!stripeCustomerId) {
             const customer = await stripe.customers.create({
                 email: user.email,
-                name: `${user.first_name} ${user.last_name}`,
+                name: user.name,
                 payment_method: payment_method_id,
                 invoice_settings: {
                     default_payment_method: payment_method_id,
@@ -66,7 +67,7 @@ export const subscribe = async (req, res, next) => {
             stripeCustomerId = customer.id;
 
             // Update user with Stripe customer ID
-            await user.update({ stripe_customer_id: stripeCustomerId });
+            await user.update({ stripeCustomerId: stripeCustomerId });
         } else {
             // Attach payment method to existing customer
             await stripe.paymentMethods.attach(payment_method_id, {

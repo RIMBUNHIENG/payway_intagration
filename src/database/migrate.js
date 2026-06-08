@@ -1,6 +1,6 @@
 import 'dotenv/config';
-import { sequelize, testConnection  } from './config.js';
-import models from '../models/index.js';
+import { sequelize, testConnection } from './config.js';
+import * as models from '../models/index.js';
 
 async function migrate() {
     try {

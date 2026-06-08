@@ -10,7 +10,7 @@ import { authenticate, authorize } from '../middleware/auth.js';
  */
 router.post('/subscribe',
     authenticate,
-    authorize(['user', 'admin']),
+    authorize('user', 'admin'),
     SubscriptionController.subscribe
 );
 
@@ -21,7 +21,7 @@ router.post('/subscribe',
  */
 router.post('/:id/cancel',
     authenticate,
-    authorize(['user', 'admin']),
+    authorize('user', 'admin'),
     SubscriptionController.cancelSubscription
 );
 
@@ -32,7 +32,7 @@ router.post('/:id/cancel',
  */
 router.post('/:id/resume',
     authenticate,
-    authorize(['user', 'admin']),
+    authorize('user', 'admin'),
     SubscriptionController.resumeSubscription
 );
 
@@ -43,7 +43,7 @@ router.post('/:id/resume',
  */
 router.post('/:id/upgrade',
     authenticate,
-    authorize(['user', 'admin']),
+    authorize('user', 'admin'),
     SubscriptionController.upgradeSubscription
 );
 
@@ -54,7 +54,7 @@ router.post('/:id/upgrade',
  */
 router.get('/my-subscriptions',
     authenticate,
-    authorize(['user', 'admin']),
+    authorize('user', 'admin'),
     SubscriptionController.listUserSubscriptions
 );
 
@@ -65,7 +65,7 @@ router.get('/my-subscriptions',
  */
 router.get('/:id',
     authenticate,
-    authorize(['user', 'admin']),
+    authorize('user', 'admin'),
     SubscriptionController.getSubscription
 );
 
@@ -76,7 +76,7 @@ router.get('/:id',
  */
 router.get('/:id/history',
     authenticate,
-    authorize(['user', 'admin']),
+    authorize('user', 'admin'),
     SubscriptionController.getSubscriptionHistory
 );
 

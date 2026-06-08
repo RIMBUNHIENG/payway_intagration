@@ -674,6 +674,8 @@
                     return;
                 }
 
+                console.log('Payment method created:', paymentMethod.id);
+
                 // Subscribe to plan
                 const response = await fetch(`${API_BASE}/subscriptions/subscribe`, {
                     method: 'POST',
@@ -688,8 +690,63 @@
                 });
 
                 const result = await response.json();
+                console.log('Subscribe response:', result);
 
                 if (response.ok) {
+                    // Check if subscription requires additional authentication
+                    const { subscription, stripe_subscription } = result;
+
+                    console.log('Full stripe_subscription:', stripe_subscription);
+
+                    if (stripe_subscription && stripe_subscription.latest_invoice) {
+                        const invoice = stripe_subscription.latest_invoice;
+                        console.log('Invoice:', invoice);
+
+                        // Handle both object and string formats for payment_intent
+                        let paymentIntent = invoice.payment_intent;
+
+                        // If payment_intent is a string ID, we need the client_secret from a different source
+                        if (typeof paymentIntent === 'string') {
+                            console.log('Payment intent is a string ID, needs expansion');
+                            // The payment intent wasn't properly expanded, but we can still try to get client_secret
+                            // from the invoice's payment_intent_client_secret field (if available)
+                            const clientSecret = invoice.payment_intent_client_secret;
+                            if (clientSecret) {
+                                console.log('Found client_secret on invoice');
+                                const { error: confirmError } = await stripe.confirmCardPayment(clientSecret);
+                                if (confirmError) {
+                                    showAlert('Payment failed: ' + confirmError.message, 'error');
+                                    btn.disabled = false;
+                                    btn.textContent = 'Subscribe';
+                                    return;
+                                }
+                            }
+                        } else if (paymentIntent && typeof paymentIntent === 'object') {
+                            console.log('Payment intent object:', paymentIntent);
+                            console.log('Payment intent status:', paymentIntent.status);
+                            console.log('Client secret:', paymentIntent.client_secret);
+
+                            // If payment requires action (3D Secure, etc.)
+                            if (paymentIntent.status === 'requires_action' || paymentIntent.status === 'requires_payment_method') {
+                                if (paymentIntent.client_secret) {
+                                    console.log('Confirming payment with client_secret');
+                                    const { error: confirmError } = await stripe.confirmCardPayment(
+                                        paymentIntent.client_secret
+                                    );
+
+                                    if (confirmError) {
+                                        showAlert('Payment failed: ' + confirmError.message, 'error');
+                                        btn.disabled = false;
+                                        btn.textContent = 'Subscribe';
+                                        return;
+                                    }
+                                } else {
+                                    console.error('Payment requires action but no client_secret found');
+                                }
+                            }
+                        }
+                    }
+
                     showAlert('Subscription created successfully!', 'success');
                     closePaymentModal();
                     loadMySubscriptions();
@@ -697,6 +754,7 @@
                     showAlert(result.error || 'Subscription failed', 'error');
                 }
             } catch (error) {
+                console.error('Subscription error:', error);
                 showAlert('Error: ' + error.message, 'error');
             } finally {
                 btn.disabled = false;
@@ -785,10 +843,14 @@
         async function handleCreatePlan(event) {
             event.preventDefault();
 
+            // Convert dollars to cents (168.00 -> 16800)
+            const priceInDollars = parseFloat(document.getElementById('planPrice').value);
+            const amountInCents = Math.round(priceInDollars * 100);
+
             const data = {
                 name: document.getElementById('planName').value,
                 description: document.getElementById('planDescription').value,
-                price: parseFloat(document.getElementById('planPrice').value),
+                amount: amountInCents, // Send as 'amount' in cents
                 currency: 'usd',
                 interval: document.getElementById('planInterval').value,
                 interval_count: 1,

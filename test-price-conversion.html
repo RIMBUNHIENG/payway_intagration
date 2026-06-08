@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Price Conversion Test</title>
+</head>
+
+<body>
+    <h1>Price Conversion Test</h1>
+
+    <input type="number" step="0.01" id="testPrice" placeholder="Enter price (e.g., 242)" value="242">
+    <button onclick="testConversion()">Test Conversion</button>
+
+    <div id="result"></div>
+
+    <script>
+        function testConversion() {
+            const inputValue = document.getElementById('testPrice').value;
+            const priceInDollars = parseFloat(inputValue);
+            const amountInCents = Math.round(priceInDollars * 100);
+
+            const displayPrice = (amountInCents / 100).toFixed(2);
+
+            document.getElementById('result').innerHTML = `
+                <h3>Conversion Results:</h3>
+                <p><strong>User Input:</strong> ${inputValue}</p>
+                <p><strong>Parsed as Dollars:</strong> ${priceInDollars}</p>
+                <p><strong>Converted to Cents:</strong> ${amountInCents}</p>
+                <p><strong>Stored in DB:</strong> ${amountInCents}</p>
+                <p><strong>Displayed as:</strong> $${displayPrice}</p>
+            `;
+        }
+    </script>
+</body>
+
+</html>
